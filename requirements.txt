@@ -1,0 +1,24 @@
+# Deep learning
+torch
+torchvision
+
+# Data & image processing
+numpy
+pandas
+pillow
+opencv-python
+scikit-image
+scikit-learn
+
+# Visualisation
+matplotlib
+
+# Training utilities
+tqdm
+
+# Frontend
+streamlit
+
+# Notebooks
+jupyter
+ipykernel
