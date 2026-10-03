@@ -46,6 +46,7 @@
 # -----------------------------------------------------------------------------
 /model/*
 !/model/.gitkeep
+!/model/*.py
 /models/*
 !/models/.gitkeep
 checkpoints/
