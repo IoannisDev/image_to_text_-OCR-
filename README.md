@@ -1,3 +1,3 @@
-### Image Segementation Model
+### OCR model
 
-**Text based image segmentation model**
+**Process large batch of text images as a txt file**
