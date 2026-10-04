@@ -16,4 +16,5 @@ First install the required libraries
  
  After installing the requirements 
  run the cv_inf.py 
- 
+
+ > The cv_inf.py opens a camera window , direct image batch processing hasnt been built yet, the ind code is only to see the model work 
