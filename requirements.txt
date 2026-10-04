@@ -90,12 +90,14 @@ psutil==7.2.2
 ptyprocess==0.7.0
 pure_eval==0.2.4
 pyarrow==25.0.1
+pyclipper==1.4.0
 pycocotools==2.0.11
 pycparser==3.0
 pydeck==0.9.3
 Pygments==2.21.0
 pyparsing==3.3.3
 python-dateutil==2.9.0.post0
+python-dotenv==1.2.4
 python-json-logger==4.2.0
 python-multipart==0.0.32
 PyYAML==6.0.3

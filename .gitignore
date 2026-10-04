@@ -148,3 +148,7 @@ ENV/
 *.swp
 *.swo
 tempCodeRunnerFile.py
+
+# inference-only checkpoints (no optimizer state) are small enough for GitHub
+!model_pt/dbnet_infer.pt
+!model_pt/crnn_infer.pt

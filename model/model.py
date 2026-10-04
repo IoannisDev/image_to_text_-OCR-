@@ -1,13 +1,4 @@
 import math
-import torch
-import os
-import pandas as pd
-from torchvision import transforms
-from torch.nn.modules.pooling import MaxPool1d
-from torch.nn.modules import ReLU
-from IPython.utils.sysinfo import release
-from torch.nn.modules.container import Sequential
-from torch.nn.modules.conv import Conv2d
 import torch, torch.nn as nn, torch.nn.functional as F
 from torchvision.models import resnet18, ResNet18_Weights
 from torchvision.models.feature_extraction import create_feature_extractor
@@ -15,9 +6,11 @@ from torchvision.models.feature_extraction import create_feature_extractor
 
 #Dbnet Model 
 class DBNet(nn.Module):
-    def __init__(self, k=50):
+    def __init__(self, k=50, pretrained=True, prob_only=False):
         super().__init__()
-        r = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        self.prob_only = prob_only      # True for inference: skip the threshold head
+        # pretrained=False for inference: the checkpoint overwrites these weights anyway
+        r = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1 if pretrained else None)
         self.body = create_feature_extractor(
             r, {"layer1": "c2", "layer2": "c3", "layer3": "c4", "layer4": "c5"})
         in_chs = [64, 128, 256, 512]
@@ -42,6 +35,8 @@ class DBNet(nn.Module):
         fused = torch.cat([F.interpolate(s(l), size=size, mode="nearest")
                            for s, l in zip(self.smooth, lat)], dim=1)   # (B, 256, H/4, W/4)
         p_logit = self.prob_head(fused)                             # P only at inference
+        if self.prob_only:
+            return p_logit
         T = torch.sigmoid(self.thresh_head(fused))
         b_logit = self.k * (torch.sigmoid(p_logit) - T)                 # DB step, as logits
         return p_logit, T, b_logit
