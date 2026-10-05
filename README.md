@@ -1,30 +1,49 @@
-### OCR model
+# OCR Model
 
-**Process large batch of text images as a txt file**
+## Model architecture
 
-**To run model on your machine** 
+The model works in two steps:
 
+1. **Find the text (DBNet):** a network built on ResNet-18 scans the image and draws a box around each word.
+2. **Read the text (CNN + Transformer):** each word box is cut out and resized. A CNN turns it into a sequence of features, and a Transformer reads that sequence and predicts the characters.
 
->Note it requires Python3.13+
-**For mac/linux**
-```python
-!python3 -m venv .venv
+The words are then put back in reading order: top to bottom, left to right.
+
+## Running the model on your machine
+
+> **Note:** Python 3.13+ is required.
+
+### 1. Create and activate a virtual environment
+
+**macOS / Linux**
+```bash
+python3 -m venv .venv
 source .venv/bin/activate
 ```
-**For windows**
-```python
-!python -m venv .venv
+
+**Windows**
+```bat
+python -m venv .venv
 .venv\Scripts\activate.bat
 ```
-**Install required libraries**
-```python
-!pip install requirements.txt
+
+### 2. Install the requirements
+
+```bash
+pip install -r requirements.txt
 ```
->Note file path for model.pt needs to be correct in the .env 
- 
- After installing the requirements 
- run the cv_inf.py 
 
- > The cv_inf.py opens a camera window , direct image batch processing hasnt been built yet, the inference code is only to see the model work 
+### 3. Configure `.env`
 
- 
+Make sure the following are set correctly in `.env`:
+
+- the file path to `model.pt`
+- the camera index
+
+### 4. Run the model
+
+```bash
+python model/cv_inf.py
+```
+
+> **Note:** `cv_inf.py` opens a camera window. Direct batch processing of images hasn't been built yet; the inference code is only meant to show the model working.
