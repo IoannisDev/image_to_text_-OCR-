@@ -26,6 +26,14 @@ The words are then put back in reading order: top to bottom, left to right.
   </tr>
 </table>
 
+## Training results
+
+### Recognition model
+
+![Validation word accuracy](docs/val_accuracy.png)
+
+After 15 epochs, the recognition model reads 76.8% of validation words exactly right, up from 62.2% after the first epoch.
+
 ## Running the model on your machine
 
 > **Note:** Python 3.13+ is required.
@@ -60,7 +68,7 @@ Make sure the following are set correctly in `.env`:
 ### 4. Run the model
 
 ```bash
-python model/cv_inf.py
+python model/proto_inference.py
 ```
 
-> **Note:** `cv_inf.py` opens a camera window. Direct batch processing of images hasn't been built yet; the inference code is only meant to show the model working.
+> **Note:** `proto_inference.py` opens a camera window. Direct batch processing of images hasn't been built yet; the inference code is only meant to show the model working.
