@@ -6,9 +6,17 @@
 
 
 >Note it requires Python3.13+
-
-First install the required libraries
-
+**For mac/linux**
+```python
+!python3 -m venv .venv
+source .venv/bin/activate
+```
+**For windows**
+```python
+!python -m venv .venv
+.venv\Scripts\activate.bat
+```
+**Install required libraries**
 ```python
 !pip install requirements.txt
 ```
