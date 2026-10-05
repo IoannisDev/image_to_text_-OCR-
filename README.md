@@ -15,7 +15,16 @@ The words are then put back in reading order: top to bottom, left to right.
 
 ### Recognition model (CNN + Transformer)
 
-![Recognition model architecture](docs/recognizer.png)
+<table>
+  <tr>
+    <th>CNN</th>
+    <th>Transformer</th>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/cnn.png" alt="CNN architecture"></td>
+    <td valign="top"><img src="docs/transformer.png" alt="Transformer architecture"></td>
+  </tr>
+</table>
 
 ## Running the model on your machine
 
