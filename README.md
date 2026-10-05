@@ -9,6 +9,14 @@ The model works in two steps:
 
 The words are then put back in reading order: top to bottom, left to right.
 
+### Detection model (DBNet)
+
+![DBNet architecture](docs/dbnet.png)
+
+### Recognition model (CNN + Transformer)
+
+![Recognition model architecture](docs/recognizer.png)
+
 ## Running the model on your machine
 
 > **Note:** Python 3.13+ is required.
