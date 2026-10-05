@@ -5,6 +5,7 @@ from torchvision.models.feature_extraction import create_feature_extractor
 
 
 #Dbnet Model 
+# This model is responsible for  identifying a box boudary around text 
 class DBNet(nn.Module):
     def __init__(self, k=50, pretrained=True, prob_only=False):
         super().__init__()
@@ -52,6 +53,7 @@ def balanced_bce(logit, gt, mask, neg_ratio=3.0, min_neg=64, eps=1e-6):
     neg_loss = loss[neg].topk(n_neg).values.sum() if n_neg > 0 else loss.new_zeros(())
     return (loss[pos].sum() + neg_loss) / (n_pos + n_neg + eps)
 
+#Full loss function that use DICE and BCE loss
 def my_loss(raw, batch):
     p_logit, T, b_logit = (t.float() for t in raw)
     gt, mask = batch["prob_map"], batch["prob_mask"]
@@ -75,7 +77,7 @@ def db_loss(p_logit, T, b_logit, gt_shrink, mask, gt_thresh, thresh_mask, alpha=
     l_t = (torch.abs(T - gt_thresh) * thresh_mask).sum() / (thresh_mask.sum() + 1e-6)
     return l_p + alpha * l_b + beta * l_t
 
-#CNN
+#CNN 
 class CNN_FE(nn.Module):
   def __init__(self) :
       super().__init__()
@@ -169,10 +171,14 @@ class BILstm(nn.Module):
     out = self.Ln(out)
     return torch.log_softmax(out,dim=2)
 
+# This is a past iteration of the model that
+# used Bidirectional LSTM , instead of this 
+# transformer was used as  replacement
+
 class crnn_model(nn.Module):
   def __init__(self):
     super().__init__()
-    self.cnn_layer = CNN_layer()
+    self.cnn_layer = CNN_FE()
     self.bi_lstm = BILstm()
   def forward(self,x):
     out = self.cnn_layer(x)

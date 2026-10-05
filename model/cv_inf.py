@@ -1,5 +1,4 @@
 import os
-
 import json, threading, time
 from pathlib import Path
 import cv2, numpy as np

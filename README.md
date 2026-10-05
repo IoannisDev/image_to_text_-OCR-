@@ -18,3 +18,5 @@ First install the required libraries
  run the cv_inf.py 
 
  > The cv_inf.py opens a camera window , direct image batch processing hasnt been built yet, the inference code is only to see the model work 
+
+ 
