@@ -304,6 +304,17 @@ def show(image, result, save_path=None, figsize=(14, 10), min_conf=0.0):
     plt.show()
 
 
+def prob_heatmap(prob, size=None, colormap=cv2.COLORMAP_JET):
+    """
+    Colour DBNet's probability map as a BGR heatmap (blue = 0, red = 1).
+    size: (width, height) to resize to, e.g. the original frame's size.
+    """
+    heat = (np.clip(prob, 0.0, 1.0) * 255).astype(np.uint8)
+    if size is not None:
+        heat = cv2.resize(heat, size, interpolation=cv2.INTER_LINEAR)
+    return cv2.applyColorMap(heat, colormap)
+
+
 #  detector evaluation
 def _clip_path(poly, scale=16):
     return np.round(np.asarray(poly, dtype=np.float64) * scale).astype(np.int64).tolist()

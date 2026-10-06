@@ -36,6 +36,8 @@ After 15 epochs, the recognition model reads 76.8% of validation words exactly r
 
 ## Benchmark: OmniDocBench
 
+The model was evaluated on [OmniDocBench](https://github.com/opendatalab/OmniDocBench) (Ouyang et al., CVPR 2025), a document-parsing benchmark from OpenDataLab. See [Acknowledgements](#acknowledgements) for the citation.
+
 > **Note:** the model was tested on the **English pages only** (755 of the 1,651 pages). Its character set has no Chinese characters, so Chinese and mixed-language pages were left out. These scores are not comparable to the full OmniDocBench leaderboard.
 
 Scores are edit distance: 0 is a perfect match and 1 is completely wrong, so lower is better.
@@ -91,3 +93,19 @@ python model/proto_inference.py
 ```
 
 > **Note:** `proto_inference.py` opens a camera window. Direct batch processing of images hasn't been built yet; the inference code is only meant to show the model working.
+
+## Acknowledgements
+
+The benchmark results above use [OmniDocBench](https://github.com/opendatalab/OmniDocBench) by OpenDataLab, released under the Apache-2.0 license.
+
+```bibtex
+@misc{ouyang2024omnidocbenchbenchmarkingdiversepdf,
+      title={OmniDocBench: Benchmarking Diverse PDF Document Parsing with Comprehensive Annotations},
+      author={Linke Ouyang and Yuan Qu and Hongbin Zhou and Jiawei Zhu and Rui Zhang and Qunshu Lin and Bin Wang and Zhiyuan Zhao and Man Jiang and Xiaomeng Zhao and Jin Shi and Fan Wu and Pei Chu and Minghao Liu and Zhenxiang Li and Chao Xu and Bo Zhang and Botian Shi and Zhongying Tu and Conghui He},
+      year={2024},
+      eprint={2412.07626},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2412.07626},
+}
+```
