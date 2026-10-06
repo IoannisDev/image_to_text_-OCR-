@@ -34,6 +34,25 @@ The words are then put back in reading order: top to bottom, left to right.
 
 After 15 epochs, the recognition model reads 76.8% of validation words exactly right, up from 62.2% after the first epoch.
 
+## Benchmark: OmniDocBench
+
+> **Note:** the model was tested on the **English pages only** (755 of the 1,651 pages). Its character set has no Chinese characters, so Chinese and mixed-language pages were left out. These scores are not comparable to the full OmniDocBench leaderboard.
+
+Scores are edit distance: 0 is a perfect match and 1 is completely wrong, so lower is better.
+
+| Category | Edit distance |
+|---|---|
+| Text | **0.351** |
+| Reading order | 0.426 |
+| Formulas | 0.870 |
+| Tables | 1.000 |
+
+The model only reads plain text, so it has no formula or table output, and those two scores are poor by design.
+
+![OmniDocBench text accuracy by page type](docs/omnidocbench_text.png)
+
+The model reads simple pages well, such as slides (0.047) and single-column pages (0.094). It does worst on multi-column pages such as newspapers (0.758). Words are grouped into lines straight across the page, so text from neighbouring columns gets mixed together.
+
 ## Running the model on your machine
 
 > **Note:** Python 3.13+ is required.
