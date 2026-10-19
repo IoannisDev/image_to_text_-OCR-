@@ -85,6 +85,7 @@ Make sure the following are set correctly in `.env`:
 
 - the file path to `model.pt`
 - the camera index
+- the charset json
 
 ### 4. Run the model
 
