@@ -1,4 +1,3 @@
-
 import inspect
 import json
 from pathlib import Path
@@ -6,16 +5,16 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-try:                      # torch is only needed to run the models, not the geometry
+try:  # torch is only needed to run the models, not the geometry
     import torch
     import torch.nn.functional as F
-except ImportError:       # pragma: no cover
+except ImportError:  # pragma: no cover
     torch = None
 
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-OUT_H = 32                # CRNN input height
-STRIDE = 4                # CRNN width downsampling
+OUT_H = 32  # CRNN input height
+STRIDE = 4  # CRNN width downsampling
 
 
 def default_device():
@@ -45,7 +44,7 @@ def order_corners(pts):
     return np.array([tl, tr, br, bl], dtype=np.float32)
 
 
-#DBNet post processing 
+# DBNet post processing
 def unclip_distance(w, h, shrink_ratio=0.4):
     """
     How far to grow a predicted region to recover the full word box.
@@ -56,7 +55,7 @@ def unclip_distance(w, h, shrink_ratio=0.4):
 
         (8 - 4k) D^2 + (2 - 2k) S D - k P = 0,   k = 1 - r^2, S = w + h, P = w h
     """
-    k = 1.0 - shrink_ratio ** 2
+    k = 1.0 - shrink_ratio**2
     S, P = w + h, w * h
     a, b, c = 8 - 4 * k, (2 - 2 * k) * S, -k * P
     return (-b + np.sqrt(b * b - 4 * a * c)) / (2 * a)
@@ -67,11 +66,18 @@ def region_score(prob, contour):
     x, y, w, h = cv2.boundingRect(contour)
     mask = np.zeros((h, w), dtype=np.uint8)
     cv2.fillPoly(mask, [contour.reshape(-1, 2) - [x, y]], 1)
-    return float(cv2.mean(prob[y:y + h, x:x + w], mask)[0])
+    return float(cv2.mean(prob[y : y + h, x : x + w], mask)[0])
 
 
-def boxes_from_prob_map(prob, bin_thresh=0.3, box_thresh=0.6, shrink_ratio=0.4,
-                        unclip_scale=1.0, min_size=3, max_candidates=2000):
+def boxes_from_prob_map(
+    prob,
+    bin_thresh=0.3,
+    box_thresh=0.6,
+    shrink_ratio=0.4,
+    unclip_scale=1.0,
+    min_size=3,
+    max_candidates=2000,
+):
     """
     prob: (H, W) float array in [0, 1] -- DBNet's probability map.
     Returns (boxes, scores): each box is 4x2 float32, corners ordered
@@ -88,7 +94,7 @@ def boxes_from_prob_map(prob, bin_thresh=0.3, box_thresh=0.6, shrink_ratio=0.4,
     boxes, scores = [], []
     for contour in contours[:max_candidates]:
         (cx, cy), (w, h), angle = cv2.minAreaRect(contour)
-        w, h = w + 1, h + 1            # contours run through pixel centres
+        w, h = w + 1, h + 1  # contours run through pixel centres
         if min(w, h) < min_size:
             continue
         score = region_score(prob, contour)
@@ -101,7 +107,7 @@ def boxes_from_prob_map(prob, bin_thresh=0.3, box_thresh=0.6, shrink_ratio=0.4,
     return boxes, scores
 
 
-#Crops the DBNet batch image
+# Crops the DBNet batch image
 def crop_word(gray, box, out_h=OUT_H, min_w=8, max_w=2000):
     """Same perspective warp the CRNN was trained on: height 32, aspect kept."""
     p = np.asarray(box, dtype=np.float32)
@@ -110,8 +116,9 @@ def crop_word(gray, box, out_h=OUT_H, min_w=8, max_w=2000):
     out_w = int(np.clip(round(w * out_h / max(h, 1e-3)), min_w, max_w))
     dst = np.float32([[0, 0], [out_w - 1, 0], [out_w - 1, out_h - 1], [0, out_h - 1]])
     M = cv2.getPerspectiveTransform(p, dst)
-    return cv2.warpPerspective(gray, M, (out_w, out_h), flags=cv2.INTER_LINEAR,
-                               borderMode=cv2.BORDER_REPLICATE)
+    return cv2.warpPerspective(
+        gray, M, (out_w, out_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE
+    )
 
 
 # Reading Order
@@ -125,10 +132,12 @@ def group_into_lines(boxes):
         return []
     cy = [float(b[:, 1].mean()) for b in boxes]
     cx = [float(b[:, 0].mean()) for b in boxes]
-    hh = [float((np.linalg.norm(b[3] - b[0]) + np.linalg.norm(b[2] - b[1])) / 2)
-          for b in boxes]
+    hh = [
+        float((np.linalg.norm(b[3] - b[0]) + np.linalg.norm(b[2] - b[1])) / 2)
+        for b in boxes
+    ]
 
-    lines = []                                   # each: {"idx": [...], "cy": .., "h": ..}
+    lines = []  # each: {"idx": [...], "cy": .., "h": ..}
     for i in sorted(range(len(boxes)), key=lambda k: cy[k]):
         best, best_gap = None, None
         for ln in lines:
@@ -147,11 +156,23 @@ def group_into_lines(boxes):
     return [sorted(ln["idx"], key=lambda k: cx[k]) for ln in lines]
 
 
-#the pipeline
+# the pipeline
 class OCRPipeline:
-    def __init__(self, dbnet, cnn, rnn, idx_to_char, device=None,
-                 long_side=1024, bin_thresh=0.3, box_thresh=0.6,
-                 unclip_scale=1.0, shrink_ratio=0.4, min_size=3, rec_batch=128):
+    def __init__(
+        self,
+        dbnet,
+        cnn,
+        rnn,
+        idx_to_char,
+        device=None,
+        long_side=1024,
+        bin_thresh=0.3,
+        box_thresh=0.6,
+        unclip_scale=1.0,
+        shrink_ratio=0.4,
+        min_size=3,
+        rec_batch=128,
+    ):
         self.device = torch.device(device or default_device())
         self.dbnet = dbnet.to(self.device).eval()
         self.cnn = cnn.to(self.device).eval()
@@ -175,7 +196,9 @@ class OCRPipeline:
         # pad to a multiple of 32, as DBNet's forward requires
         ph, pw = (32 - nh % 32) % 32, (32 - nw % 32) % 32
         if ph or pw:
-            img = cv2.copyMakeBorder(img, 0, ph, 0, pw, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+            img = cv2.copyMakeBorder(
+                img, 0, ph, 0, pw, cv2.BORDER_CONSTANT, value=(0, 0, 0)
+            )
 
         x = (img.astype(np.float32) / 255.0 - IMAGENET_MEAN) / IMAGENET_STD
         x = torch.from_numpy(x.transpose(2, 0, 1))[None].to(self.device)
@@ -188,18 +211,25 @@ class OCRPipeline:
             p = out[0]
         else:
             p = out[:, :1]
-        p = torch.sigmoid(p.float())             # DBNet's prob head returns logits
+        p = torch.sigmoid(p.float())  # DBNet's prob head returns logits
         if p.shape[-2:] != x.shape[-2:]:
-            p = F.interpolate(p, size=x.shape[-2:], mode="bilinear", align_corners=False)
+            p = F.interpolate(
+                p, size=x.shape[-2:], mode="bilinear", align_corners=False
+            )
         prob = p[0, 0, :nh, :nw].cpu().numpy()
 
         boxes, scores = boxes_from_prob_map(
-            prob, self.bin_thresh, self.box_thresh, self.shrink_ratio,
-            self.unclip_scale, self.min_size)
-        boxes = [b / scale for b in boxes]       # back to original pixels
+            prob,
+            self.bin_thresh,
+            self.box_thresh,
+            self.shrink_ratio,
+            self.unclip_scale,
+            self.min_size,
+        )
+        boxes = [b / scale for b in boxes]  # back to original pixels
         return boxes, scores, prob
 
-    # recognition 
+    # recognition
     def recognize(self, gray, boxes):
         """Returns (texts, confidences), one per box, in the order given."""
         n = len(boxes)
@@ -211,17 +241,17 @@ class OCRPipeline:
         # batch crops of similar width together so little is wasted on padding
         order = sorted(range(n), key=lambda i: crops[i].shape[1])
         for s in range(0, n, self.rec_batch):
-            idx = order[s:s + self.rec_batch]
+            idx = order[s : s + self.rec_batch]
             widths = [crops[i].shape[1] for i in idx]
             batch = torch.zeros(len(idx), 1, OUT_H, max(widths))
             for k, i in enumerate(idx):
-                batch[k, 0, :, :widths[k]] = torch.from_numpy(crops[i]).float() / 255.0
+                batch[k, 0, :, : widths[k]] = torch.from_numpy(crops[i]).float() / 255.0
             lengths = torch.tensor([wd // STRIDE for wd in widths], dtype=torch.long)
 
             with torch.no_grad():
                 feats = self.cnn(batch.to(self.device))
                 lp = self.rnn(feats, lengths) if self.pass_lengths else self.rnn(feats)
-            best_p, best_i = lp.float().max(dim=2)          # (T, B)
+            best_p, best_i = lp.float().max(dim=2)  # (T, B)
             best_p, best_i = best_p.exp().cpu(), best_i.cpu()
             T = best_i.shape[0]
 
@@ -229,7 +259,7 @@ class OCRPipeline:
                 L = min(int(lengths[k]), T)
                 prev, chars, ps = None, [], []
                 for c, pr in zip(best_i[:L, k].tolist(), best_p[:L, k].tolist()):
-                    if c != prev and c != 0:                # greedy CTC decode
+                    if c != prev and c != 0:  # greedy CTC decode
                         chars.append(self.idx_to_char.get(c, ""))
                         ps.append(pr)
                     prev = c
@@ -244,21 +274,32 @@ class OCRPipeline:
         boxes, scores, _ = self.detect(rgb)
         texts, confs = self.recognize(gray, boxes)
 
-        words = [{"box": b, "text": t, "det_score": s, "rec_conf": c}
-                 for b, t, s, c in zip(boxes, texts, scores, confs)]
-        lines = [" ".join(texts[i] for i in ln if texts[i])
-                 for ln in group_into_lines(boxes)]
+        words = [
+            {"box": b, "text": t, "det_score": s, "rec_conf": c}
+            for b, t, s, c in zip(boxes, texts, scores, confs)
+        ]
+        lines = [
+            " ".join(texts[i] for i in ln if texts[i]) for ln in group_into_lines(boxes)
+        ]
         lines = [ln for ln in lines if ln]
         return {"words": words, "lines": lines, "text": "\n".join(lines)}
 
 
-def load_pipeline(dbnet_ckpt, crnn_ckpt, charset_json, DBNet, CNN_layer, make_rnn,
-                  device=None, **pipeline_kwargs):
+def load_pipeline(
+    dbnet_ckpt,
+    crnn_ckpt,
+    charset_json,
+    DBNet,
+    CNN_layer,
+    make_rnn,
+    device=None,
+    **pipeline_kwargs,
+):
     """Build the three models, load the checkpoints, return an OCRPipeline."""
     device = torch.device(device or default_device())
 
     chars = json.loads(Path(charset_json).read_text(encoding="utf-8"))["chars"]
-    idx_to_char = {i: c for i, c in enumerate(chars, start=1)}     # 0 = CTC blank
+    idx_to_char = {i: c for i, c in enumerate(chars, start=1)}  # 0 = CTC blank
 
     dbnet = DBNet()
     ck = torch.load(dbnet_ckpt, map_location=device, weights_only=False)
@@ -272,7 +313,8 @@ def load_pipeline(dbnet_ckpt, crnn_ckpt, charset_json, DBNet, CNN_layer, make_rn
         raise ValueError(
             f"CRNN checkpoint has {saved} classes but {charset_json} defines "
             f"{len(chars) + 1}. This is not the charset the model was trained with, "
-            f"so its output would decode to the wrong characters.")
+            f"so its output would decode to the wrong characters."
+        )
     cnn.load_state_dict(ck["cnn_state_dict"])
     rnn.load_state_dict(ck["rnn_state_dict"])
     print(f"CRNN:  epoch {ck.get('epoch')}  val_CER {ck.get('val_cer')}")
@@ -293,10 +335,18 @@ def show(image, result, save_path=None, figsize=(14, 10), min_conf=0.0):
         if wd["rec_conf"] < min_conf:
             continue
         color = "lime" if wd["rec_conf"] >= 0.8 else "orange"
-        ax.add_patch(Polygon(wd["box"], closed=True, fill=False, edgecolor=color, linewidth=1.5))
+        ax.add_patch(
+            Polygon(wd["box"], closed=True, fill=False, edgecolor=color, linewidth=1.5)
+        )
         x, y = wd["box"][0]
-        ax.text(x, y - 3, wd["text"], fontsize=8, color="black",
-                bbox=dict(facecolor=color, alpha=0.75, pad=1, edgecolor="none"))
+        ax.text(
+            x,
+            y - 3,
+            wd["text"],
+            fontsize=8,
+            color="black",
+            bbox=dict(facecolor=color, alpha=0.75, pad=1, edgecolor="none"),
+        )
     ax.axis("off")
     plt.tight_layout()
     if save_path:
@@ -317,7 +367,9 @@ def prob_heatmap(prob, size=None, colormap=cv2.COLORMAP_JET):
 
 #  detector evaluation
 def _clip_path(poly, scale=16):
-    return np.round(np.asarray(poly, dtype=np.float64) * scale).astype(np.int64).tolist()
+    return (
+        np.round(np.asarray(poly, dtype=np.float64) * scale).astype(np.int64).tolist()
+    )
 
 
 def _area(poly):
@@ -327,16 +379,22 @@ def _area(poly):
 def intersection_area(a, b, scale=16):
     """Area of overlap between two polygons (any shape, not just rectangles)."""
     import pyclipper
+
     a, b = np.asarray(a), np.asarray(b)
-    if (a[:, 0].max() < b[:, 0].min() or b[:, 0].max() < a[:, 0].min() or
-            a[:, 1].max() < b[:, 1].min() or b[:, 1].max() < a[:, 1].min()):
+    if (
+        a[:, 0].max() < b[:, 0].min()
+        or b[:, 0].max() < a[:, 0].min()
+        or a[:, 1].max() < b[:, 1].min()
+        or b[:, 1].max() < a[:, 1].min()
+    ):
         return 0.0
     try:
         pc = pyclipper.Pyclipper()
         pc.AddPath(_clip_path(a, scale), pyclipper.PT_SUBJECT, True)
         pc.AddPath(_clip_path(b, scale), pyclipper.PT_CLIP, True)
-        parts = pc.Execute(pyclipper.CT_INTERSECTION,
-                           pyclipper.PFT_NONZERO, pyclipper.PFT_NONZERO)
+        parts = pc.Execute(
+            pyclipper.CT_INTERSECTION, pyclipper.PFT_NONZERO, pyclipper.PFT_NONZERO
+        )
     except pyclipper.ClipperException:
         return 0.0
     return sum(abs(pyclipper.Area(p)) for p in parts) / (scale * scale)
@@ -380,8 +438,15 @@ def match_detections(pred_boxes, gt_polys, gt_ignore, iou_thresh=0.5):
     return tp, len(preds), len(care)
 
 
-def evaluate_detector(pipeline, json_path, img_dir, image_ids, max_images=300,
-                      min_text_size=8, iou_thresh=0.5):
+def evaluate_detector(
+    pipeline,
+    json_path,
+    img_dir,
+    image_ids,
+    max_images=300,
+    min_text_size=8,
+    iou_thresh=0.5,
+):
     """
     Box-level precision / recall / F1 at IoU 0.5 over a set of TextOCR images.
     This is the real detection metric; the pixel-F1 printed during training is
@@ -402,7 +467,9 @@ def evaluate_detector(pipeline, json_path, img_dir, image_ids, max_images=300,
             pts = np.array(ann["points"], dtype=np.float32).reshape(-1, 2)
             if len(pts) < 3:
                 continue
-            short = min(pts[:, 0].max() - pts[:, 0].min(), pts[:, 1].max() - pts[:, 1].min())
+            short = min(
+                pts[:, 0].max() - pts[:, 0].min(), pts[:, 1].max() - pts[:, 1].min()
+            )
             polys.append(pts)
             ignore.append(ann["utf8_string"] == "." or short < min_text_size)
 
@@ -414,6 +481,15 @@ def evaluate_detector(pipeline, json_path, img_dir, image_ids, max_images=300,
     recall = tp / max(n_gt, 1)
     f1 = 2 * precision * recall / max(precision + recall, 1e-9)
     print(f"images {n_img}   predictions {n_pred}   ground-truth words {n_gt}")
-    print(f"precision {precision:.4f}   recall {recall:.4f}   F1 {f1:.4f}   (IoU >= {iou_thresh})")
-    return {"precision": precision, "recall": recall, "f1": f1,
-            "tp": tp, "n_pred": n_pred, "n_gt": n_gt, "images": n_img}
+    print(
+        f"precision {precision:.4f}   recall {recall:.4f}   F1 {f1:.4f}   (IoU >= {iou_thresh})"
+    )
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "tp": tp,
+        "n_pred": n_pred,
+        "n_gt": n_gt,
+        "images": n_img,
+    }
