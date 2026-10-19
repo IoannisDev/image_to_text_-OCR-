@@ -1,7 +1,9 @@
 import numpy as np
+import pandas as pd
 import streamlit as st
 from ocr_service import OCRSetupError, Settings, build_pipeline, run_ocr
 from PIL import Image, ImageOps
+from render import draw_boxes, heatmap, visible_words
 
 st.set_page_config(page_title="Image to Text", page_icon="◻︎", layout="wide")
 
@@ -53,6 +55,13 @@ with st.sidebar:
         ),
     )
 
+    st.header("Display")
+    min_conf = st.slider(
+        "Minimum confidence", 0.0, 0.95, 0.0, 0.05,
+        help="Hide words the model is less sure about.",
+    )
+    show_labels = st.toggle("Show labels on image", value=True)
+
 source = st.segmented_control(
     "Source", ["Upload", "Camera"], default="Upload", label_visibility="collapsed"
 )
@@ -71,5 +80,47 @@ result = cached_ocr(
     pipe, rgb, cfg.bin_thresh, cfg.box_thresh, cfg.unclip_scale, cfg.long_side
 )
 
-st.image(rgb, use_container_width=True)
-st.code(result.text or "No text found", language=None)
+words = visible_words(result.words, min_conf)
+
+c1, c2, c3 = st.columns(3)
+c1.metric("Words", len(words))
+c2.metric("Time", f"{result.seconds:.2f} s")
+c3.metric("Device", result.device)
+
+overlay_tab, text_tab, words_tab, heat_tab = st.tabs(
+    ["Overlay", "Text", "Words", "Heatmap"]
+)
+
+with overlay_tab:
+    st.image(
+        draw_boxes(rgb, result.words, min_conf, show_labels), use_container_width=True
+    )
+    st.caption("Green boxes are confident reads, orange ones are less certain.")
+
+with text_tab:
+    if result.text:
+        st.code(result.text, language=None, wrap_lines=True)
+        st.download_button("Download .txt", result.text, file_name="ocr.txt")
+    else:
+        st.info("No text found. Try lowering the box threshold.")
+
+with words_tab:
+    st.dataframe(
+        pd.DataFrame(
+            {
+                "Word": [w["text"] for w in words],
+                "Detection": [w["det_score"] for w in words],
+                "Recognition": [w["rec_conf"] for w in words],
+            }
+        ),
+        column_config={
+            "Detection": st.column_config.ProgressColumn(min_value=0, max_value=1),
+            "Recognition": st.column_config.ProgressColumn(min_value=0, max_value=1),
+        },
+        hide_index=True,
+        use_container_width=True,
+    )
+
+with heat_tab:
+    st.image(heatmap(result.prob, (rgb.shape[1], rgb.shape[0])), use_container_width=True)
+    st.caption("White is where the detector is sure there is text.")
