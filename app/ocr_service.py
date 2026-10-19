@@ -78,13 +78,18 @@ def run_ocr(pipe, rgb, settings):
     boxes, scores, prob = pipe.detect(rgb)
     texts, confs = pipe.recognize(gray, boxes)
 
+    grouped = group_into_lines(boxes)
+    order = [i for ln in grouped for i in ln]
     words = [
-        {"box": b, "text": t, "det_score": s, "rec_conf": c}
-        for b, t, s, c in zip(boxes, texts, scores, confs)
+        {
+            "box": boxes[i],
+            "text": texts[i],
+            "det_score": scores[i],
+            "rec_conf": confs[i],
+        }
+        for i in order
     ]
-    lines = [
-        " ".join(texts[i] for i in ln if texts[i]) for ln in group_into_lines(boxes)
-    ]
+    lines = [" ".join(texts[i] for i in ln if texts[i]) for ln in grouped]
     lines = [ln for ln in lines if ln]
     return OCRResult(
         words=words,
