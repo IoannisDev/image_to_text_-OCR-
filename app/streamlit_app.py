@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -6,6 +8,12 @@ from PIL import Image, ImageOps
 from render import draw_boxes, heatmap, visible_words
 
 st.set_page_config(page_title="Image to Text", page_icon="◻︎", layout="wide")
+
+
+st.markdown(
+    f"<style>{(Path(__file__).parent / 'style.css').read_text()}</style>",
+    unsafe_allow_html=True,
+)
 
 
 @st.cache_resource(show_spinner="Loading models")
