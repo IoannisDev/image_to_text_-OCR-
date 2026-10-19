@@ -1,0 +1,79 @@
+html, body, [class*="st-"], .stApp, button, input, textarea {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+code, pre, [data-testid="stCode"] * {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace !important;
+}
+
+.stApp { background: #ffffff; }
+
+header[data-testid="stHeader"] { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); }
+#MainMenu, footer { visibility: hidden; }
+
+.block-container { max-width: 1040px; padding-top: 4rem; }
+
+h1 {
+  font-size: 3.4rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.05 !important;
+  color: #1d1d1f;
+}
+h2, h3 { letter-spacing: -0.02em !important; font-weight: 600 !important; }
+[data-testid="stCaptionContainer"] { color: #6e6e73; font-size: 1.15rem; }
+
+section[data-testid="stSidebar"] {
+  background: #f5f5f7;
+  border-right: 1px solid #e5e5ea;
+}
+section[data-testid="stSidebar"] h2 { font-size: 1.1rem; }
+
+[data-testid="stFileUploaderDropzone"] {
+  background: #f5f5f7;
+  border: 1.5px dashed #c7c7cc;
+  border-radius: 20px;
+  padding: 2.6rem 1rem;
+}
+[data-testid="stFileUploaderDropzone"]:hover { border-color: #1d1d1f; }
+
+.stButton > button, .stDownloadButton > button, [data-testid="stFileUploaderDropzone"] button {
+  background: #1d1d1f;
+  color: #ffffff;
+  border: none;
+  border-radius: 980px;
+  padding: 0.5rem 1.4rem;
+  font-weight: 500;
+}
+.stButton > button:hover, .stDownloadButton > button:hover,
+[data-testid="stFileUploaderDropzone"] button:hover { background: #000000; color: #ffffff; }
+
+[data-baseweb="tab-list"] { gap: 0.5rem; border-bottom: 1px solid #e5e5ea; }
+[data-baseweb="tab"] { font-weight: 500; color: #6e6e73; }
+[data-baseweb="tab"][aria-selected="true"] { color: #1d1d1f; }
+[data-baseweb="tab-highlight"] { background: #1d1d1f !important; }
+
+[data-testid="stMetric"] {
+  background: #f5f5f7;
+  border-radius: 20px;
+  padding: 1.1rem 1.4rem;
+}
+[data-testid="stMetricLabel"] { color: #6e6e73; }
+[data-testid="stMetricValue"] { font-weight: 600; letter-spacing: -0.02em; }
+
+[data-testid="stImage"] img, [data-testid="stCameraInput"] video {
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+[data-testid="stCode"] { border-radius: 16px; background: #f5f5f7; }
+[data-testid="stDataFrame"] { border-radius: 16px; overflow: hidden; border: 1px solid #e5e5ea; }
+[data-testid="stAlert"] { border-radius: 16px; }
+[data-testid="stSegmentedControl"] button[aria-checked="true"],
+[data-testid="stSegmentedControl"] button[aria-pressed="true"] { background: #1d1d1f; color: #ffffff; }
+
+[data-testid="stIconMaterial"], .material-symbols-rounded, [class*="material-icons"] {
+  font-family: "Material Symbols Rounded", "Material Icons" !important;
+}
+[data-testid="stAppDeployButton"], .stDeployButton { display: none; }

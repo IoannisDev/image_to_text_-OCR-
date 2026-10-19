@@ -95,6 +95,16 @@ python model/proto_inference.py
 
 > **Note:** `proto_inference.py` opens a camera window. Direct batch processing of images hasn't been built yet; the inference code is only meant to show the model working.
 
+## Running the web UI
+
+The web app lets you upload an image or take a photo and see the detected words, the extracted text, per-word confidence and the detector's heatmap. Detection thresholds can be tuned from the sidebar.
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+If `.env` is missing, the app falls back to the default paths in `.env.example`.
+
 ## Acknowledgements
 
 The benchmark results above use [OmniDocBench](https://github.com/opendatalab/OmniDocBench) by OpenDataLab, released under the Apache-2.0 license.
